@@ -1,0 +1,78 @@
+From 9f70be9e429a834838a76c7cb32f782a4b309ba5 Mon Sep 17 00:00:00 2001
+From: beevk <beevk.singh@gmail.com>
+Date: Sun, 25 Oct 2020 00:47:43 +0700
+Subject: [PATCH] fix: stop duplicate entry for history
+
+---
+ .gitignore                                 |  1 +
+ src/components/ui/SummaryCard.vue          |  4 ++--
+ src/store/modules/history/historyAction.js | 20 ++++++++++++++------
+ 3 files changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index 403adbc..dc3bac2 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -21,3 +21,4 @@ pnpm-debug.log*
+ *.njsproj
+ *.sln
+ *.sw?
++*.patch
+diff --git a/src/components/ui/SummaryCard.vue b/src/components/ui/SummaryCard.vue
+index 9d8122e..41aa146 100644
+--- a/src/components/ui/SummaryCard.vue
++++ b/src/components/ui/SummaryCard.vue
+@@ -47,8 +47,8 @@ export default {
+   filters: {
+     ellipsis(text) {
+       const { length } = text;
+-      const trimmedString = text.slice(0, 100);
+-      if (length > 100) {
++      const trimmedString = text.slice(0, 80);
++      if (length > 80) {
+         return `${trimmedString}...`;
+       }
+       return trimmedString;
+diff --git a/src/store/modules/history/historyAction.js b/src/store/modules/history/historyAction.js
+index b0fb269..1bd2e52 100644
+--- a/src/store/modules/history/historyAction.js
++++ b/src/store/modules/history/historyAction.js
+@@ -1,8 +1,19 @@
+ import { initializeHistory, pushToHistory } from '../../types';
+ 
++const validateArticleSlug = (history, slug) => {
++  if (!history.length) {
++    return true;
++  }
++  const historyItem = history.filter(((h) => h.slug === slug));
++  return !(historyItem.length);
++};
++
+ const actions = {
+   loadInitialStateForHistory({ commit }) {
+     const historyFromLocalStorage = JSON.parse(localStorage.getItem('visitedArticlesHistory'));
++    if (!historyFromLocalStorage) {
++      return;
++    }
+     const isValid = !!(
+       Array.isArray(historyFromLocalStorage.history)
+       && historyFromLocalStorage.history.length
+@@ -16,12 +27,9 @@ const actions = {
+   updateHistory({ commit, state, rootState }, articleSlug) {
+     const { articles } = rootState.articles;
+     const currentArticle = articles.find(((article) => article.slug === articleSlug));
+-    const oldHistory = state.history.length;
+-    let isNewHistoryItem = true;
+-    if (oldHistory) {
+-      isNewHistoryItem = !(state.history.reduce((h) => h.slug === articleSlug).length);
+-    }
+-    if (isNewHistoryItem) {
++    const oldHistory = [...state.history];
++    const isValid = validateArticleSlug(oldHistory, articleSlug);
++    if (isValid) {
+       const { title, author, slug } = currentArticle;
+       commit(pushToHistory, { title, author, slug });
+     }
+-- 
+2.25.1
+

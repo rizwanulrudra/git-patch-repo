@@ -1,0 +1,264 @@
+From e435755576fc894f8ea300c13b02cddbfeccea5f Mon Sep 17 00:00:00 2001
+From: beevk <beevk.singh@gmail.com>
+Date: Sat, 24 Oct 2020 00:02:11 +0700
+Subject: [PATCH] refactor: improved HTML Template structure
+
+---
+ src/components/articles/Articles.vue          | 16 ++--
+ src/components/articles/Details.vue           | 73 +++++++++----------
+ .../filter/DropDownListForFilter.vue          | 27 +++----
+ src/components/filter/Search.vue              | 32 ++++----
+ src/components/ui/SummaryCard.vue             |  1 -
+ src/views/Home.vue                            | 25 +++----
+ 6 files changed, 80 insertions(+), 94 deletions(-)
+
+diff --git a/src/components/articles/Articles.vue b/src/components/articles/Articles.vue
+index 96e3f32..8c655e4 100644
+--- a/src/components/articles/Articles.vue
++++ b/src/components/articles/Articles.vue
+@@ -1,7 +1,6 @@
+ <template>
+-  <v-row wrap>
+-    <v-col class="d-flex justify-center flex-wrap">
+-      <div class="d-flex wrap" v-if="isLoading">
++  <div>
++      <div class="d-flex wrap justify-center" v-if="isLoading">
+         <v-progress-circular
+           :size="70"
+           :width="7"
+@@ -19,17 +18,16 @@
+           {{errorMessage}}
+         </v-alert>
+       </div>
+-      <div
+-        v-else
++      <v-row v-else>
++        <v-col cols="12" sm="6" md="6" lg="4"
+         v-for="article in articles"
+         :key="article.url"
+         @click="onClick(article.slug)"
+-        class="wrap"
+       >
+         <SummaryCard :article="article" />
+-      </div>
+-    </v-col>
+-  </v-row>
++        </v-col>
++      </v-row>
++  </div>
+ </template>
+ 
+ <script>
+diff --git a/src/components/articles/Details.vue b/src/components/articles/Details.vue
+index 6fe6615..d0988df 100644
+--- a/src/components/articles/Details.vue
++++ b/src/components/articles/Details.vue
+@@ -1,42 +1,41 @@
+ <template>
+   <v-container>
+-  <v-row>
+-    <v-col xs="12" class="d-flex justify-center flex-wrap">
+-    <div v-if="article">
+-      <ArticleToolbar
+-        v-on:readFullNews="redirect"
+-        v-on:changeTitle="updateTitle"
+-        :title="article.title"
+-        :createdOn="formattedDateTime(article.publishedAt)"
+-        :author="author(article.author, article.source.name)"
+-      />
+-      <h3 class=".text-h3 text--secondary mb-3">{{article.description}}</h3>
+-      <v-img
+-       :src="article.urlToImage"
+-       :alt="article.description"
+-       max-height="50vh"
+-       max-width="80vw"
+-      />
+-      <p class=".body-1 text--primary mt-10">{{article.content | sanitize}}</p>
+-      <div v-if="showModal">
+-        <EditModal
+-         :title="article.title"
+-         :showModal="showModal"
+-         v-on:closeModal="closeModal"
+-         v-on:updateTitleFromModal="updateTitleAndCloseModal"
+-        />
+-      </div>
+-    </div>
+-    <div class="d-flex wrap" v-else>
+-        <v-progress-circular
+-          :size="70"
+-          :width="7"
+-          color="primary"
+-          indeterminate
+-        ></v-progress-circular>
+-      </div>
+-    </v-col>
+-  </v-row>
++    <v-row>
++      <v-col xs="12" class="d-flex justify-center flex-wrap">
++        <div v-if="article">
++          <ArticleToolbar
++            v-on:readFullNews="redirect"
++            v-on:changeTitle="updateTitle"
++            :title="article.title"
++            :createdOn="formattedDateTime(article.publishedAt)"
++            :author="author(article.author, article.source.name)"
++          />
++          <h3 class=".text-h3 text--secondary mb-3">{{article.description}}</h3>
++          <v-img
++            :src="article.urlToImage"
++            :alt="article.description"
++            aspect-ratio="2"
++          />
++          <p class=".body-1 text--primary mt-10">{{article.content | sanitize}}</p>
++          <div v-if="showModal">
++            <EditModal
++              :title="article.title"
++              :showModal="showModal"
++              v-on:closeModal="closeModal"
++              v-on:updateTitleFromModal="updateTitleAndCloseModal"
++            />
++          </div>
++        </div>
++        <div class="d-flex wrap" v-else>
++          <v-progress-circular
++            :size="70"
++            :width="7"
++            color="primary"
++            indeterminate
++          ></v-progress-circular>
++        </div>
++      </v-col>
++    </v-row>
+   </v-container>
+ </template>
+ 
+diff --git a/src/components/filter/DropDownListForFilter.vue b/src/components/filter/DropDownListForFilter.vue
+index f395b53..7b4b9aa 100644
+--- a/src/components/filter/DropDownListForFilter.vue
++++ b/src/components/filter/DropDownListForFilter.vue
+@@ -1,20 +1,15 @@
+ <template>
+-  <v-row class="my-0">
+-    <div v-if="dropDownOptions">
+-      <v-col>
+-        <v-select
+-            :items="dropDownOptions"
+-            item-text="text"
+-            item-value="value"
+-            item-name="text"
+-            label="Select Source"
+-            prepend-icon="filter_alt"
+-            v-on:change="onSelect"
+-            single-line
+-          ></v-select>
+-        </v-col>
+-    </div>
+-  </v-row>
++  <div v-if="dropDownOptions">
++    <v-select
++      :items="dropDownOptions"
++      item-text="text"
++      item-value="value"
++      label="Select Source"
++      prepend-icon="filter_alt"
++      v-on:change="onSelect"
++      single-line
++    ></v-select>
++  </div>
+ </template>
+ 
+ <script>
+diff --git a/src/components/filter/Search.vue b/src/components/filter/Search.vue
+index f22a5e3..0dddab7 100644
+--- a/src/components/filter/Search.vue
++++ b/src/components/filter/Search.vue
+@@ -1,23 +1,19 @@
+ <template>
+-  <v-row>
+-    <v-col xs-12 >
+-    <v-form class="">
+-      <v-text-field
+-        label="Search"
+-        v-model="query"
+-        hide-details="auto"
+-        @input="onChange"
++  <v-form class="">
++    <v-text-field
++      label="Search"
++      v-model="query"
++      hide-details="auto"
++      @input="onChange"
++    >
++      <v-icon
++        slot="append"
++        color="secondary"
+       >
+-        <v-icon
+-          slot="append"
+-          color="secondary"
+-        >
+-          search
+-        </v-icon>
+-      </v-text-field>
+-    </v-form>
+-    </v-col>
+-  </v-row>
++        search
++      </v-icon>
++    </v-text-field>
++  </v-form>
+ </template>
+ 
+ <script>
+diff --git a/src/components/ui/SummaryCard.vue b/src/components/ui/SummaryCard.vue
+index a549a73..9d8122e 100644
+--- a/src/components/ui/SummaryCard.vue
++++ b/src/components/ui/SummaryCard.vue
+@@ -3,7 +3,6 @@
+   <v-card
+     elevation="2"
+     class="my-4 ml-auto"
+-    max-width="370"
+     min-height="400"
+   >
+     <v-img
+diff --git a/src/views/Home.vue b/src/views/Home.vue
+index 75d96ed..ccc964f 100644
+--- a/src/views/Home.vue
++++ b/src/views/Home.vue
+@@ -1,20 +1,19 @@
+ <template>
+   <v-container>
+-    <v-row>
+-      <v-col class="xs-12" xs="12" md="4">
++    <v-row align="center">
++      <v-col class="xs-12" cols="12" xs="12" md="4">
+         <h1>Headlines</h1>
+       </v-col>
+-      <v-col class="xs-12" xs="12" md="8">
+-        <v-toolbar flat class="d-flex justify-end">
+-          <v-row wrap>
+-            <v-col s="12" md="6" l="4">
+-              <DropDownListForFilter />
+-            </v-col>
+-            <v-col s="12" md="6" l="4">
+-              <Search />
+-            </v-col>
+-          </v-row>
+-        </v-toolbar>
++      <v-col class="xs-12" cols="12" xs="12" md="8">
++        <v-row>
++          <v-spacer mdOnly md="4" />
++          <v-col cols="12" xs="12" sm="6" md="4">
++            <DropDownListForFilter />
++          </v-col>
++          <v-col cols="12" xs="12" sm="6" md="4">
++            <Search />
++          </v-col>
++        </v-row>
+       </v-col>
+     </v-row>
+     <v-row>
+-- 
+2.25.1
+
