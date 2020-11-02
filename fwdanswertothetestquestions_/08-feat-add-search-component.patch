@@ -1,0 +1,417 @@
+From 278eba568167ec88f931d5e0d936a80105b4fb9d Mon Sep 17 00:00:00 2001
+From: Bivek <beevk.singh@gmail.com>
+Date: Thu, 22 Oct 2020 19:31:02 +0700
+Subject: [PATCH] feat: add search component
+
+---
+ package-lock.json                             | 120 ++++++++++++------
+ src/components/articles/Articles.vue          |   2 +-
+ .../filter/DropDownListForFilter.vue          |   5 +-
+ src/components/filter/Search.vue              |  41 +++---
+ src/store/articles/actions.js                 |  31 +++++
+ src/store/articles/getters.js                 |  25 +++-
+ src/views/Home.vue                            |  15 +--
+ 7 files changed, 174 insertions(+), 65 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index 7702536..dfd5e68 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -2191,17 +2191,6 @@
+             "unique-filename": "^1.1.1"
+           }
+         },
+-        "chalk": {
+-          "version": "4.1.0",
+-          "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz",
+-          "integrity": "sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "ansi-styles": "^4.1.0",
+-            "supports-color": "^7.1.0"
+-          }
+-        },
+         "cliui": {
+           "version": "6.0.0",
+           "resolved": "https://registry.npm.taobao.org/cliui/download/cliui-6.0.0.tgz?cache=0&sync_timestamp=1602861567636&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fcliui%2Fdownload%2Fcliui-6.0.0.tgz",
+@@ -2265,18 +2254,6 @@
+             "supports-color": "^7.0.0"
+           }
+         },
+-        "loader-utils": {
+-          "version": "2.0.0",
+-          "resolved": "https://registry.npmjs.org/loader-utils/-/loader-utils-2.0.0.tgz",
+-          "integrity": "sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "big.js": "^5.2.2",
+-            "emojis-list": "^3.0.0",
+-            "json5": "^2.1.2"
+-          }
+-        },
+         "locate-path": {
+           "version": "5.0.0",
+           "resolved": "https://registry.npm.taobao.org/locate-path/download/locate-path-5.0.0.tgz?cache=0&sync_timestamp=1597082792431&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Flocate-path%2Fdownload%2Flocate-path-5.0.0.tgz",
+@@ -2367,18 +2344,6 @@
+             "webpack-sources": "^1.4.3"
+           }
+         },
+-        "vue-loader-v16": {
+-          "version": "npm:vue-loader@16.0.0-beta.8",
+-          "resolved": "https://registry.npmjs.org/vue-loader/-/vue-loader-16.0.0-beta.8.tgz",
+-          "integrity": "sha512-oouKUQWWHbSihqSD7mhymGPX1OQ4hedzAHyvm8RdyHh6m3oIvoRF+NM45i/bhNOlo8jCnuJhaSUf/6oDjv978g==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "chalk": "^4.1.0",
+-            "hash-sum": "^2.0.0",
+-            "loader-utils": "^2.0.0"
+-          }
+-        },
+         "wrap-ansi": {
+           "version": "6.2.0",
+           "resolved": "https://registry.npm.taobao.org/wrap-ansi/download/wrap-ansi-6.2.0.tgz",
+@@ -10074,8 +10039,8 @@
+     },
+     "lodash": {
+       "version": "4.17.20",
+-      "resolved": "https://registry.npm.taobao.org/lodash/download/lodash-4.17.20.tgz?cache=0&sync_timestamp=1597335994883&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Flodash%2Fdownload%2Flodash-4.17.20.tgz",
+-      "integrity": "sha1-tEqbYpe8tpjxxRo1RaKzs2jVnFI=",
++      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
++      "integrity": "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==",
+       "dev": true
+     },
+     "lodash.defaultsdeep": {
+@@ -14851,6 +14816,87 @@
+         }
+       }
+     },
++    "vue-loader-v16": {
++      "version": "npm:vue-loader@16.0.0-beta.8",
++      "resolved": "https://registry.npmjs.org/vue-loader/-/vue-loader-16.0.0-beta.8.tgz",
++      "integrity": "sha512-oouKUQWWHbSihqSD7mhymGPX1OQ4hedzAHyvm8RdyHh6m3oIvoRF+NM45i/bhNOlo8jCnuJhaSUf/6oDjv978g==",
++      "dev": true,
++      "optional": true,
++      "requires": {
++        "chalk": "^4.1.0",
++        "hash-sum": "^2.0.0",
++        "loader-utils": "^2.0.0"
++      },
++      "dependencies": {
++        "ansi-styles": {
++          "version": "4.3.0",
++          "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
++          "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "color-convert": "^2.0.1"
++          }
++        },
++        "chalk": {
++          "version": "4.1.0",
++          "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz",
++          "integrity": "sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "ansi-styles": "^4.1.0",
++            "supports-color": "^7.1.0"
++          }
++        },
++        "color-convert": {
++          "version": "2.0.1",
++          "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
++          "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "color-name": "~1.1.4"
++          }
++        },
++        "color-name": {
++          "version": "1.1.4",
++          "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
++          "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
++          "dev": true,
++          "optional": true
++        },
++        "has-flag": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
++          "integrity": "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==",
++          "dev": true,
++          "optional": true
++        },
++        "loader-utils": {
++          "version": "2.0.0",
++          "resolved": "https://registry.npmjs.org/loader-utils/-/loader-utils-2.0.0.tgz",
++          "integrity": "sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "big.js": "^5.2.2",
++            "emojis-list": "^3.0.0",
++            "json5": "^2.1.2"
++          }
++        },
++        "supports-color": {
++          "version": "7.2.0",
++          "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
++          "integrity": "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "has-flag": "^4.0.0"
++          }
++        }
++      }
++    },
+     "vue-router": {
+       "version": "3.4.7",
+       "resolved": "https://registry.npm.taobao.org/vue-router/download/vue-router-3.4.7.tgz?cache=0&sync_timestamp=1602838656586&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvue-router%2Fdownload%2Fvue-router-3.4.7.tgz",
+diff --git a/src/components/articles/Articles.vue b/src/components/articles/Articles.vue
+index 54515e3..a000a05 100644
+--- a/src/components/articles/Articles.vue
++++ b/src/components/articles/Articles.vue
+@@ -4,7 +4,7 @@
+     <div>
+       <div v-if="isLoading">Loading spinner...</div>
+       <div v-else-if="hasError" class="errorMessage">{{errorMessage}}</div>
+-      <div v-else v-for="article in articles" :key="article.slug" @click="onClick(article.slug)">
++      <div v-else v-for="article in articles" :key="article.url" @click="onClick(article.slug)">
+         <p>{{article.title}}</p>
+       </div>
+     </div>
+diff --git a/src/components/filter/DropDownListForFilter.vue b/src/components/filter/DropDownListForFilter.vue
+index 8b4b6b9..f678ef6 100644
+--- a/src/components/filter/DropDownListForFilter.vue
++++ b/src/components/filter/DropDownListForFilter.vue
+@@ -1,12 +1,12 @@
+ <template>
+   <div class="details">
+-    <h2> Articles Component </h2>
+     <div v-if="dropDownOptions">
+       <v-select
+           :items="dropDownOptions"
+           item-text="text"
+           item-value="value"
+-          label="Select"
++          label="Select Source"
++          :defaultSelected="selectedSource"
+           v-on:change="onSelect"
+         ></v-select>
+     </div>
+@@ -37,6 +37,7 @@ export default {
+   computed: {
+     ...mapGetters({
+       dropDownOptions: 'dropDownOptions',
++      selectedSource: 'selectedSource',
+     }),
+   },
+ };
+diff --git a/src/components/filter/Search.vue b/src/components/filter/Search.vue
+index 97713c1..a4c5713 100644
+--- a/src/components/filter/Search.vue
++++ b/src/components/filter/Search.vue
+@@ -1,13 +1,13 @@
+ <template>
+-  <div class="details">
+-    <h2> Articles Component </h2>
+-    <div v-if="article">
+-      <img :src="article.urlToImage" :alt="article.description" class='image'>
+-      <h1>{{article.title}}</h1>
+-    </div>
+-    <div v-else>
+-      Loading...
+-    </div>
++  <div class="search">
++    <v-form class="px-4">
++    <v-text-field
++      label="Search"
++      v-model="query"
++      @input="onChange"
++    >
++    </v-text-field>
++    </v-form>
+   </div>
+ </template>
+ 
+@@ -16,25 +16,36 @@ import { mapGetters, mapActions } from 'vuex';
+ 
+ export default {
+   name: 'Search',
+-  components: {
++
++  data() {
++    return {
++      query: '',
++    };
+   },
+ 
++  timeoutId: '',
++
+   methods: {
+     ...mapActions({
+-      setSelectedSourceForFilter: 'setSelectedSourceForFilter',
++      searchArticles: 'searchArticles',
+     }),
++
++    onChange(value) {
++      clearTimeout(this.timeoutId);
++      this.timeoutId = setTimeout(() => {
++        this.searchArticles(value);
++      }, 500);
++      // debounce(this.search, 500);
++    },
+   },
+ 
+   computed: {
+     ...mapGetters({
+-      dropDownOptions: 'dropDownOptions',
++      // dropDownOptions: 'dropDownOptions',
+     }),
+   },
+ };
+ </script>
+ 
+ <style scoped>
+-.image {
+-  max-height: 40vh;
+-}
+ </style>
+diff --git a/src/store/articles/actions.js b/src/store/articles/actions.js
+index ac61332..e3cc50c 100644
+--- a/src/store/articles/actions.js
++++ b/src/store/articles/actions.js
+@@ -54,6 +54,37 @@ const actions = {
+     return commit('clearSourceError', false);
+   },
+ 
++  async searchArticles({ commit }, query) {
++    commit('setLoading', true);
++
++    const client = Api.getInstance('https://newsapi.org', () => '099148be22804e849a0c6fe022b7cf5e');
++    const data = await client.search.search(query);
++
++    const { articles, status, message = '' } = data;
++    if (status === 'error') {
++      commit('setLoading', false);
++      return commit('setNewsError', message);
++    }
++    if (articles.length === 0) {
++      return commit('setNewsError', `No news Article found for ${query}`);
++    }
++
++    const articlesWithSlug = articles.map(
++      (article) => {
++        const copy = { ...article };
++        const { publishedAt, title } = copy;
++        const slug = sluggedUrl(publishedAt, title);
++        // console.log('SLUG:::', slug, copy);
++        copy.slug = slug;
++        return copy;
++      },
++    );
++
++    commit('setArticles', articlesWithSlug);
++    commit('clearNewsError');
++    return commit('setLoading', false);
++  },
++
+   loadInitialStateForHistory({ commit }) {
+     const historyFromLocalStorage = JSON.parse(localStorage.getItem('visitedArticlesHistory'));
+     if (Array.isArray(historyFromLocalStorage) && historyFromLocalStorage.length) {
+diff --git a/src/store/articles/getters.js b/src/store/articles/getters.js
+index 7214eeb..1de4ea3 100644
+--- a/src/store/articles/getters.js
++++ b/src/store/articles/getters.js
+@@ -17,6 +17,24 @@ const getters = {
+     return state.articles.filter((item) => history.includes(item.slug));
+   },
+ 
++  selectedSource: (state) => {
++    const { sources, selectedSourceForFilter } = state;
++    let selected;
++    if (!selectedSourceForFilter) {
++      selected = {
++        text: 'All',
++        value: selectedSourceForFilter,
++      };
++      return selected;
++    }
++    const selectedSourceOption = sources.filter((source) => source.id === selected);
++    selected = {
++      text: selectedSourceOption.name,
++      value: selectedSourceForFilter,
++    };
++    return selected;
++  },
++
+   dropDownOptions: (state) => {
+     const { articles, sources } = state;
+     const availableSourceInArticles = articles.map((article) => article.source.id);
+@@ -30,8 +48,11 @@ const getters = {
+       const current = a.value;
+       const next = b.value;
+       // console.log(`current: ${current}, next: ${next}`);
+-      if (availableSourceInArticles.indexOf(current) < availableSourceInArticles.indexOf(next)) {
+-        console.log('sorting on top', current);
++      let isCurrentInArticles = availableSourceInArticles.indexOf(current);
++      isCurrentInArticles = isCurrentInArticles >= 0 ? 1 : 0;
++      let isNextInArticles = availableSourceInArticles.indexOf(next);
++      isNextInArticles = isNextInArticles >= 0 ? 1 : 0;
++      if (isCurrentInArticles < isNextInArticles) {
+         return 1;
+       }
+       return -1;
+diff --git a/src/views/Home.vue b/src/views/Home.vue
+index 3bb7f45..baab943 100644
+--- a/src/views/Home.vue
++++ b/src/views/Home.vue
+@@ -1,33 +1,32 @@
+ <template>
+   <div class="borderWithPadding home">
+-    <h1>This is Home page</h1>
+     <div class="borderWithPadding filterComponent">
+       <div class="borderWithPadding searchBar">
+-        searchBar
++        <Search />
+       </div>
+       <div class="borderWithPadding filterDropdown">
+         <DropDownListForFilter />
+       </div>
+     </div>
+-    <div class="borderWithPadding articles">
+-      articles
+-      <div class="borderWithPadding article">
+-        <Articles />
+-      </div>
++    <div>
++      <h1>Today's Headlines</h1>
++      <Articles />
+     </div>
+   </div>
+ </template>
+ 
+ <script>
+ // @ is an alias to /src
+-import Articles from '@/components/articles/Articles.vue';
++import Articles from '../components/articles/Articles.vue';
+ import DropDownListForFilter from '../components/filter/DropDownListForFilter.vue';
++import Search from '../components/filter/Search.vue';
+ 
+ export default {
+   name: 'Home',
+   components: {
+     Articles,
+     DropDownListForFilter,
++    Search,
+   },
+ };
+ </script>
+-- 
+2.25.1
+

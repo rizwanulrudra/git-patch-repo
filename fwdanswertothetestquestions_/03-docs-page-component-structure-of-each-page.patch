@@ -1,0 +1,179 @@
+From 443d2445c234d3a9394d982ed180182a99c977a0 Mon Sep 17 00:00:00 2001
+From: beevk <beevk.singh@gmail.com>
+Date: Wed, 21 Oct 2020 02:49:40 +0700
+Subject: [PATCH] docs: page / component structure of each page
+
+---
+ src/App.vue                  |  2 +-
+ src/router/index.js          | 14 +++++++++---
+ src/views/404.vue            | 10 +++++++++
+ src/views/ArticleDetails.vue | 41 ++++++++++++++++++++++++++++++++++++
+ src/views/Home.vue           | 31 +++++++++++++++++++++++----
+ 5 files changed, 90 insertions(+), 8 deletions(-)
+ create mode 100644 src/views/404.vue
+ create mode 100644 src/views/ArticleDetails.vue
+
+diff --git a/src/App.vue b/src/App.vue
+index 1fbabcd..d23c71a 100644
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -13,7 +13,7 @@
+           <h1>Common Header for all pages</h1>
+           <div id="nav">
+             <router-link to="/">Home</router-link> |
+-            <router-link to="/about">About</router-link>
++            <router-link to="/article/a">Article</router-link>
+           </div>
+         </header>
+         <main>
+diff --git a/src/router/index.js b/src/router/index.js
+index 2a46b2d..e02bc44 100644
+--- a/src/router/index.js
++++ b/src/router/index.js
+@@ -1,6 +1,8 @@
+ import Vue from 'vue';
+ import VueRouter from 'vue-router';
+ import Home from '../views/Home.vue';
++import ArticleDetails from '../views/ArticleDetails.vue';
++import NotFound from '../views/404.vue';
+ 
+ Vue.use(VueRouter);
+ 
+@@ -11,12 +13,18 @@ const routes = [
+     component: Home,
+   },
+   {
+-    path: '/about',
+-    name: 'About',
++    path: '/article/:title',
++    name: 'ArticleDetails',
++    component: ArticleDetails,
+     // route level code-splitting
+     // this generates a separate chunk (about.[hash].js) for this route
+     // which is lazy-loaded when the route is visited.
+-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue'),
++    // component: () => import(/* webpackChunkName: "about" */ '../views/ArticleDetails.vue'),
++  },
++  {
++    path: '*',
++    name: '404',
++    component: NotFound,
+   },
+ ];
+ 
+diff --git a/src/views/404.vue b/src/views/404.vue
+new file mode 100644
+index 0000000..a5b30ad
+--- /dev/null
++++ b/src/views/404.vue
+@@ -0,0 +1,10 @@
++<template>
++  <div class="borderWithPadding home">
++    <h1>404 Error: Oops! you should not have seen this.</h1>
++    <p>Please go back to reading news...</p>
++  </div>
++</template>
++
++<script>
++export default {};
++</script>
+diff --git a/src/views/ArticleDetails.vue b/src/views/ArticleDetails.vue
+new file mode 100644
+index 0000000..2b5b3ab
+--- /dev/null
++++ b/src/views/ArticleDetails.vue
+@@ -0,0 +1,41 @@
++<template>
++  <div class="borderWithPadding about">
++    <h1>This is an Article Details page</h1>
++    <div class="borderWithPadding functionalComponent">
++      Functional components
++      <button>Read this news</button>
++      <button>Edit this Headline</button>
++      <div class="borderWithPadding modal">
++        Modal to edit headline (only visible on button click - Edit this Headline)
++      </div>
++    </div>
++    <div class="borderWithPadding articleDetailsPage">
++      articleDetailsPage
++    </div>
++    <div class="borderWithPadding historyOfVisitedLinks">
++      historyOfVisitedLinks
++    </div>
++  </div>
++</template>
++
++<script>
++export default {
++  name: 'ArticleDetails',
++  components: {
++    // HelloWorld,
++  },
++};
++</script>
++
++<style scoped>
++  .borderWithPadding {
++    border: 1px solid #F57499;
++    padding: 20px;
++    margin: 10px;
++  }
++
++  button {
++    border: solid 2px black;
++    margin-left: 10px;
++  }
++</style>
+diff --git a/src/views/Home.vue b/src/views/Home.vue
+index 2a029e4..7060d28 100644
+--- a/src/views/Home.vue
++++ b/src/views/Home.vue
+@@ -1,18 +1,41 @@
+ <template>
+-  <div class="home">
++  <div class="borderWithPadding home">
+     <h1>This is Home page</h1>
+-    <HelloWorld msg="Welcome to Your Vue.js App"/>
++    <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
++    <div class="borderWithPadding filterComponent">
++      filterComponent
++      <div class="borderWithPadding searchBar">
++        searchBar
++      </div>
++      <div class="borderWithPadding filterDropdown">
++        filterDropdown
++      </div>
++    </div>
++    <div class="borderWithPadding articles">
++      articles
++      <div class="borderWithPadding article">
++        article
++      </div>
++    </div>
+   </div>
+ </template>
+ 
+ <script>
+ // @ is an alias to /src
+-import HelloWorld from '@/components/HelloWorld.vue';
++// import HelloWorld from '@/components/HelloWorld.vue';
+ 
+ export default {
+   name: 'Home',
+   components: {
+-    HelloWorld,
++    // HelloWorld,
+   },
+ };
+ </script>
++
++<style scoped>
++  .borderWithPadding {
++    border: 1px solid #F57499;
++    padding: 20px;
++    margin: 10px;
++  }
++</style>
+-- 
+2.25.1
+

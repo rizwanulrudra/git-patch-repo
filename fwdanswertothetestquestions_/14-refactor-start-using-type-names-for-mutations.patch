@@ -1,0 +1,436 @@
+From 533af10675e5879c687ebc436f5cabc0c58b5c6b Mon Sep 17 00:00:00 2001
+From: beevk <beevk.singh@gmail.com>
+Date: Sat, 24 Oct 2020 18:22:59 +0700
+Subject: [PATCH] refactor: start using type names for mutations
+
+---
+ src/components/ui/EditModal.vue               |  2 +-
+ src/router/index.js                           |  2 +-
+ src/store/modules/articles/articlesAction.js  | 50 +++++++++++--------
+ src/store/modules/articles/articlesGetters.js |  6 +--
+ .../modules/articles/articlesMutation.js      | 25 ++++++----
+ src/store/modules/errors/errorsAction.js      | 19 ++++---
+ src/store/modules/errors/errorsMutation.js    | 15 ++++--
+ src/store/modules/history/historyAction.js    |  6 ++-
+ src/store/modules/history/historyMutation.js  |  6 ++-
+ src/store/types.js                            | 46 +++++++++--------
+ src/views/{404.vue => Error404.vue}           | 10 ++--
+ 11 files changed, 112 insertions(+), 75 deletions(-)
+ rename src/views/{404.vue => Error404.vue} (51%)
+
+diff --git a/src/components/ui/EditModal.vue b/src/components/ui/EditModal.vue
+index 4d89ab5..30e3c7b 100644
+--- a/src/components/ui/EditModal.vue
++++ b/src/components/ui/EditModal.vue
+@@ -103,7 +103,7 @@ export default {
+ 
+     updateTitle() {
+       const value = this.inputData;
+-      if (value.length < 3 || value.length > 100) {
++      if (value.length < 2 || value.length > 100) {
+         return;
+       }
+       this.$emit('updateTitleFromModal', value);
+diff --git a/src/router/index.js b/src/router/index.js
+index eac7178..984f0d7 100644
+--- a/src/router/index.js
++++ b/src/router/index.js
+@@ -2,7 +2,7 @@ import Vue from 'vue';
+ import VueRouter from 'vue-router';
+ import Home from '../views/Home.vue';
+ import ArticleDetails from '../views/ArticleDetails.vue';
+-import NotFound from '../views/404.vue';
++import NotFound from '../views/Error404.vue';
+ 
+ Vue.use(VueRouter);
+ 
+diff --git a/src/store/modules/articles/articlesAction.js b/src/store/modules/articles/articlesAction.js
+index 9109f50..869045a 100644
+--- a/src/store/modules/articles/articlesAction.js
++++ b/src/store/modules/articles/articlesAction.js
+@@ -1,3 +1,11 @@
++import {
++  setLoading,
++  setArticles,
++  setCurrentArticle,
++  setSources,
++  setSelectedSource,
++  updateTitle,
++} from '../../types';
+ import getSdk from '../../../api';
+ 
+ const sluggedUrl = (publishedAt, url) => {
+@@ -16,16 +24,16 @@ const sluggedUrl = (publishedAt, url) => {
+ const actions = {
+   async fetchArticles(context) {
+     const { commit, dispatch } = context;
+-    commit('setLoading', true);
+-    commit('setSelectedSource', 'all');
++    commit(setLoading, true);
++    commit(setSelectedSource, 'all');
+ 
+     const client = getSdk();
+     const data = await client.headlines.listHeadlines();
+ 
+     const { articles, status, message = '' } = data;
+     if (status === 'error') {
+-      commit('setLoading', false);
+-      dispatch('errors/setNewsError', message, { root: true });
++      commit(setLoading, false);
++      dispatch('errors/setArticleError', message, { root: true });
+       return;
+     }
+ 
+@@ -39,9 +47,9 @@ const actions = {
+       },
+     );
+ 
+-    commit('setArticles', articlesWithSlug);
+-    dispatch('errors/clearNewsError', null, { root: true });
+-    commit('setLoading', false);
++    commit(setArticles, articlesWithSlug);
++    dispatch('errors/clearArticleError', null, { root: true });
++    commit(setLoading, false);
+   },
+ 
+   async fetchSources({ commit, dispatch }) {
+@@ -50,29 +58,29 @@ const actions = {
+ 
+     const { sources, status, message = '' } = data;
+     if (status === 'error') {
+-      commit('setSourceError', message);
++      dispatch('errors/setSourceError', message);
+       return;
+     }
+ 
+-    commit('setSources', sources);
++    commit(setSources, sources);
+     dispatch('errors/clearSourceError', false, { root: true });
+   },
+ 
+   async searchArticles({ commit, dispatch }, query) {
+-    commit('setLoading', true);
++    commit(setLoading, true);
+ 
+     const client = getSdk();
+     const data = await client.search.search(query);
+ 
+     const { articles, status, message = '' } = data;
+     if (status === 'error') {
+-      commit('setLoading', false);
+-      dispatch('errors/setNewsError', message, { root: true });
++      commit(setLoading, false);
++      dispatch('errors/setArticleError', message, { root: true });
+       return;
+     }
+     if (articles.length === 0) {
+-      commit('setLoading', false);
+-      dispatch('errors/setNewsError', `No news Article found for ${query}`, { root: true });
++      commit(setLoading, false);
++      dispatch('errors/setArticleError', `No news Article found for ${query}`, { root: true });
+       return;
+     }
+ 
+@@ -86,19 +94,19 @@ const actions = {
+       },
+     );
+ 
+-    commit('setArticles', articlesWithSlug);
+-    dispatch('errors/clearNewsError', null, { root: true });
+-    commit('setLoading', false);
++    commit(setArticles, articlesWithSlug);
++    dispatch('errors/clearArticleError', null, { root: true });
++    commit(setLoading, false);
+   },
+ 
+   updateCurrentPage({ commit, state, dispatch }, url) {
+     const { articles = [] } = state;
+     if (articles.length) {
+-      commit('setCurrentArticle', url);
++      commit(setCurrentArticle, url);
+       return;
+     }
+     dispatch('fetchArticles').then(() => {
+-      commit('setCurrentArticle', url);
++      commit(setCurrentArticle, url);
+     });
+   },
+ 
+@@ -107,11 +115,11 @@ const actions = {
+     const { slug, value } = payload;
+     const originalArticle = articles.find((x) => x.slug === slug);
+     const updatedArticle = { ...originalArticle, title: value };
+-    commit('updateTitle', { slug, updatedArticle });
++    commit(updateTitle, { slug, updatedArticle });
+   },
+ 
+   setSelectedSourceForFilter({ commit }, source) {
+-    commit('setSelectedSource', source);
++    commit(setSelectedSource, source);
+   },
+ };
+ 
+diff --git a/src/store/modules/articles/articlesGetters.js b/src/store/modules/articles/articlesGetters.js
+index 587eea2..3038622 100644
+--- a/src/store/modules/articles/articlesGetters.js
++++ b/src/store/modules/articles/articlesGetters.js
+@@ -35,11 +35,11 @@ const getters = {
+ 
+   getCurrentArticle: (state) => {
+     const currentSlug = state.currentPage;
+-    const allNews = state.news;
+-    if (!allNews) {
++    const allArticles = state.articles;
++    if (!allArticles) {
+       return undefined;
+     }
+-    const newsArticle = allNews.find((article) => article.slug === currentSlug);
++    const newsArticle = allArticles.find((article) => article.slug === currentSlug);
+     return { ...newsArticle };
+   },
+ 
+diff --git a/src/store/modules/articles/articlesMutation.js b/src/store/modules/articles/articlesMutation.js
+index 1f19f47..74d42e6 100644
+--- a/src/store/modules/articles/articlesMutation.js
++++ b/src/store/modules/articles/articlesMutation.js
+@@ -1,29 +1,34 @@
++import {
++  setLoading,
++  setArticles,
++  setCurrentArticle,
++  setSources,
++  setSelectedSource,
++  updateTitle,
++} from '../../types';
++
+ const mutations = {
+-  setLoading: (state, isLoading) => {
++  [setLoading]: (state, isLoading) => {
+     state.isLoading = isLoading;
+   },
+ 
+-  setArticles: (state, news) => {
++  [setArticles]: (state, news) => {
+     state.articles = [...news];
+   },
+ 
+-  updateCurrentPage: (state, currentPage) => {
+-    state.currentPage = currentPage;
+-  },
+-
+-  setCurrentArticle: (state, articleSlug) => {
++  [setCurrentArticle]: (state, articleSlug) => {
+     state.currentArticle = articleSlug;
+   },
+ 
+-  setSources: (state, sources) => {
++  [setSources]: (state, sources) => {
+     state.sources = sources;
+   },
+ 
+-  setSelectedSource: (state, source) => {
++  [setSelectedSource]: (state, source) => {
+     state.selectedSourceForFilter = source;
+   },
+ 
+-  updateTitle: (state, { slug, updatedArticle }) => {
++  [updateTitle]: (state, { slug, updatedArticle }) => {
+     const { articles } = state;
+     const otherArticles = articles.filter((article) => article.slug !== slug);
+     state.articles = [
+diff --git a/src/store/modules/errors/errorsAction.js b/src/store/modules/errors/errorsAction.js
+index 918b77f..6a4a91d 100644
+--- a/src/store/modules/errors/errorsAction.js
++++ b/src/store/modules/errors/errorsAction.js
+@@ -1,18 +1,25 @@
++import {
++  setArticleError,
++  setSourceError,
++  clearArticleError,
++  clearSourceError,
++} from '../../types';
++
+ const actions = {
+-  setNewsError({ commit }, payload) {
+-    commit('setArticleError', payload);
++  setArticleError({ commit }, payload) {
++    commit(setArticleError, payload);
+   },
+ 
+   setSourceError({ commit }, payload) {
+-    commit('setSourceError', payload);
++    commit(setSourceError, payload);
+   },
+ 
+-  clearNewsError({ commit }, payload) {
+-    commit('clearArticleError', payload);
++  clearArticleError({ commit }, payload) {
++    commit(clearArticleError, payload);
+   },
+ 
+   clearSourceError({ commit }, payload) {
+-    commit('clearSourceError', payload);
++    commit(clearSourceError, payload);
+   },
+ };
+ 
+diff --git a/src/store/modules/errors/errorsMutation.js b/src/store/modules/errors/errorsMutation.js
+index af12656..199147d 100644
+--- a/src/store/modules/errors/errorsMutation.js
++++ b/src/store/modules/errors/errorsMutation.js
+@@ -1,20 +1,27 @@
++import {
++  setArticleError,
++  setSourceError,
++  clearArticleError,
++  clearSourceError,
++} from '../../types';
++
+ const mutations = {
+-  setArticleError: (state, errorMessage) => {
++  [setArticleError]: (state, errorMessage) => {
+     state.hasArticleError = true;
+     state.articleErrorMessage = errorMessage;
+   },
+ 
+-  setSourceError: (state, errorMessage) => {
++  [setSourceError]: (state, errorMessage) => {
+     state.hasSourceError = true;
+     state.sourceErrorMessage = errorMessage;
+   },
+ 
+-  clearArticleError: (state) => {
++  [clearArticleError]: (state) => {
+     state.hasArticleError = false;
+     state.articleErrorMessage = '';
+   },
+ 
+-  clearSourceError: (state) => {
++  [clearSourceError]: (state) => {
+     state.hasSourceError = false;
+     state.sourceErrorMessage = '';
+   },
+diff --git a/src/store/modules/history/historyAction.js b/src/store/modules/history/historyAction.js
+index af9cf9b..e8de203 100644
+--- a/src/store/modules/history/historyAction.js
++++ b/src/store/modules/history/historyAction.js
+@@ -1,13 +1,15 @@
++import { initializeHistory, pushToHistory } from '../../types';
++
+ const actions = {
+   loadInitialStateForHistory({ commit }) {
+     const historyFromLocalStorage = JSON.parse(localStorage.getItem('visitedArticlesHistory'));
+     if (Array.isArray(historyFromLocalStorage) && historyFromLocalStorage.length) {
+-      commit('initializeHistory', historyFromLocalStorage);
++      commit(initializeHistory, historyFromLocalStorage);
+     }
+   },
+ 
+   updateHistory({ commit }, url) {
+-    commit('pushToHistory', url);
++    commit(pushToHistory, url);
+   },
+ };
+ 
+diff --git a/src/store/modules/history/historyMutation.js b/src/store/modules/history/historyMutation.js
+index 15e16e9..92efdf3 100644
+--- a/src/store/modules/history/historyMutation.js
++++ b/src/store/modules/history/historyMutation.js
+@@ -1,9 +1,11 @@
++import { initializeHistory, pushToHistory } from '../../types';
++
+ const mutations = {
+-  initializeHistory: (state, history) => {
++  [initializeHistory]: (state, history) => {
+     state.history = [...history];
+   },
+ 
+-  pushToHistory: (state, articleSlug) => {
++  [pushToHistory]: (state, articleSlug) => {
+     const { history } = state;
+     if (history.indexOf(articleSlug) === -1) {
+       state.history = [...history, articleSlug];
+diff --git a/src/store/types.js b/src/store/types.js
+index ea3262c..0d65ef9 100644
+--- a/src/store/types.js
++++ b/src/store/types.js
+@@ -1,25 +1,29 @@
+-const updateErrorMessage = '_UPDATE_ERROR_MESSAGE';
+-const updateArticleError = '_UPDATE_ARTICLE_ERROR';
+-const updateSearchError = '_UPDATE_SEARCH_ERROR';
+-const updateSourceError = '_UPDATE_SOURCE_ERROR';
++const setArticleError = 'SET_ARTICLE_ERROR';
++const setSourceError = 'SET_SOURCE_ERROR';
++const clearArticleError = 'CLEAR_ARTICLE_ERROR';
++const clearSourceError = 'CLEAR_SOURCE_ERROR';
+ 
+-const updateHistory = 'UPDATE_HISTORY';
++const initializeHistory = 'INITIALIZE_HISTORY';
++const pushToHistory = 'PUSH_TO_HISTORY';
+ 
+-const createArticles = 'CREATE_ARTICLES';
+-const createSources = 'CREATE_SOURCES';
+-const updateSelectedSource = 'UPDATE_SELECTED_SOURCE';
+-const updateCurrentArticle = 'UPDATE_CURRENT_ARTICLE';
+-const updateLoading = '_SET_LOADING';
++const setLoading = 'SET_LOADING';
++const setArticles = 'SET_ARTICLES';
++const setCurrentArticle = 'SET_CURRENT_ARTICLE';
++const setSources = 'SET_SOURCES';
++const setSelectedSource = 'SET_SELECTED_SOURCE';
++const updateTitle = 'UPDATE_TITLE';
+ 
+-export default {
+-  updateLoading,
+-  updateArticleError,
+-  updateSearchError,
+-  updateSourceError,
+-  updateErrorMessage,
+-  createArticles,
+-  createSources,
+-  updateSelectedSource,
+-  updateCurrentArticle,
+-  updateHistory,
++export {
++  setArticleError,
++  setSourceError,
++  clearArticleError,
++  clearSourceError,
++  initializeHistory,
++  pushToHistory,
++  setLoading,
++  setArticles,
++  setCurrentArticle,
++  setSources,
++  setSelectedSource,
++  updateTitle,
+ };
+diff --git a/src/views/404.vue b/src/views/Error404.vue
+similarity index 51%
+rename from src/views/404.vue
+rename to src/views/Error404.vue
+index 2392ddb..7fbf9f1 100644
+--- a/src/views/404.vue
++++ b/src/views/Error404.vue
+@@ -1,12 +1,14 @@
+-<template>
+-  <div class="borderWithPadding home">
++<template functional>
++  <div>
+     <h1>404 Error: Oops! you should not have seen this.</h1>
+-    <p>Please go back to reading news...</p>
++    <p>
++      Please go back to reading news articles...
++    </p>
+   </div>
+ </template>
+ 
+ <script>
+ export default {
+-  name: '404',
++  name: 'Error404',
+ };
+ </script>
+-- 
+2.25.1
+

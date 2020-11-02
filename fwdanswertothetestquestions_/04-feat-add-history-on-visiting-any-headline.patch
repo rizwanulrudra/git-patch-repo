@@ -1,0 +1,400 @@
+From a58dc1b7669a46954204feea222df42b2c2808f6 Mon Sep 17 00:00:00 2001
+From: Bivek <beevk.singh@gmail.com>
+Date: Wed, 21 Oct 2020 18:52:15 +0700
+Subject: [PATCH] feat: add history on visiting any headline
+
+---
+ package-lock.json                    | 116 +++++++++++++++++++--------
+ src/App.vue                          |  15 +++-
+ src/components/articles/Articles.vue |  18 ++++-
+ src/router/index.js                  |   2 +-
+ src/store/articles/actions.js        |  25 +++---
+ src/store/articles/mutations.js      |  11 +++
+ src/store/index.js                   |  11 ++-
+ src/store/rootState.js               |   1 +
+ src/views/ArticleDetails.vue         |   4 +
+ 9 files changed, 154 insertions(+), 49 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index 69f0d8d..0e499be 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -2191,17 +2191,6 @@
+             "unique-filename": "^1.1.1"
+           }
+         },
+-        "chalk": {
+-          "version": "4.1.0",
+-          "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz",
+-          "integrity": "sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "ansi-styles": "^4.1.0",
+-            "supports-color": "^7.1.0"
+-          }
+-        },
+         "cliui": {
+           "version": "6.0.0",
+           "resolved": "https://registry.npm.taobao.org/cliui/download/cliui-6.0.0.tgz?cache=0&sync_timestamp=1602861567636&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fcliui%2Fdownload%2Fcliui-6.0.0.tgz",
+@@ -2265,18 +2254,6 @@
+             "supports-color": "^7.0.0"
+           }
+         },
+-        "loader-utils": {
+-          "version": "2.0.0",
+-          "resolved": "https://registry.npmjs.org/loader-utils/-/loader-utils-2.0.0.tgz",
+-          "integrity": "sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "big.js": "^5.2.2",
+-            "emojis-list": "^3.0.0",
+-            "json5": "^2.1.2"
+-          }
+-        },
+         "locate-path": {
+           "version": "5.0.0",
+           "resolved": "https://registry.npm.taobao.org/locate-path/download/locate-path-5.0.0.tgz?cache=0&sync_timestamp=1597082792431&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Flocate-path%2Fdownload%2Flocate-path-5.0.0.tgz",
+@@ -2367,18 +2344,6 @@
+             "webpack-sources": "^1.4.3"
+           }
+         },
+-        "vue-loader-v16": {
+-          "version": "npm:vue-loader@16.0.0-beta.8",
+-          "resolved": "https://registry.npmjs.org/vue-loader/-/vue-loader-16.0.0-beta.8.tgz",
+-          "integrity": "sha512-oouKUQWWHbSihqSD7mhymGPX1OQ4hedzAHyvm8RdyHh6m3oIvoRF+NM45i/bhNOlo8jCnuJhaSUf/6oDjv978g==",
+-          "dev": true,
+-          "optional": true,
+-          "requires": {
+-            "chalk": "^4.1.0",
+-            "hash-sum": "^2.0.0",
+-            "loader-utils": "^2.0.0"
+-          }
+-        },
+         "wrap-ansi": {
+           "version": "6.2.0",
+           "resolved": "https://registry.npm.taobao.org/wrap-ansi/download/wrap-ansi-6.2.0.tgz",
+@@ -14851,6 +14816,87 @@
+         }
+       }
+     },
++    "vue-loader-v16": {
++      "version": "npm:vue-loader@16.0.0-beta.8",
++      "resolved": "https://registry.npmjs.org/vue-loader/-/vue-loader-16.0.0-beta.8.tgz",
++      "integrity": "sha512-oouKUQWWHbSihqSD7mhymGPX1OQ4hedzAHyvm8RdyHh6m3oIvoRF+NM45i/bhNOlo8jCnuJhaSUf/6oDjv978g==",
++      "dev": true,
++      "optional": true,
++      "requires": {
++        "chalk": "^4.1.0",
++        "hash-sum": "^2.0.0",
++        "loader-utils": "^2.0.0"
++      },
++      "dependencies": {
++        "ansi-styles": {
++          "version": "4.3.0",
++          "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
++          "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "color-convert": "^2.0.1"
++          }
++        },
++        "chalk": {
++          "version": "4.1.0",
++          "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz",
++          "integrity": "sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "ansi-styles": "^4.1.0",
++            "supports-color": "^7.1.0"
++          }
++        },
++        "color-convert": {
++          "version": "2.0.1",
++          "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
++          "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "color-name": "~1.1.4"
++          }
++        },
++        "color-name": {
++          "version": "1.1.4",
++          "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
++          "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
++          "dev": true,
++          "optional": true
++        },
++        "has-flag": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
++          "integrity": "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==",
++          "dev": true,
++          "optional": true
++        },
++        "loader-utils": {
++          "version": "2.0.0",
++          "resolved": "https://registry.npmjs.org/loader-utils/-/loader-utils-2.0.0.tgz",
++          "integrity": "sha512-rP4F0h2RaWSvPEkD7BLDFQnvSf+nK+wr3ESUjNTyAGobqrijmW92zc+SO6d4p4B1wh7+B/Jg1mkQe5NYUEHtHQ==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "big.js": "^5.2.2",
++            "emojis-list": "^3.0.0",
++            "json5": "^2.1.2"
++          }
++        },
++        "supports-color": {
++          "version": "7.2.0",
++          "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
++          "integrity": "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==",
++          "dev": true,
++          "optional": true,
++          "requires": {
++            "has-flag": "^4.0.0"
++          }
++        }
++      }
++    },
+     "vue-router": {
+       "version": "3.4.7",
+       "resolved": "https://registry.npm.taobao.org/vue-router/download/vue-router-3.4.7.tgz?cache=0&sync_timestamp=1602838656586&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvue-router%2Fdownload%2Fvue-router-3.4.7.tgz",
+diff --git a/src/App.vue b/src/App.vue
+index d23c71a..dfcffe9 100644
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -25,14 +25,27 @@
+ </template>
+ 
+ <script>
++import { mapActions } from 'vuex';
++import { unsubscribeStore } from './store';
+ 
+ export default {
+   name: 'App',
+ 
+-  components: {
++  methods: {
++    ...mapActions({
++      loadInitialStateForHistory: 'loadInitialStateForHistory',
++    }),
+   },
+ 
+   data: () => ({
+   }),
++
++  created() {
++    this.loadInitialStateForHistory();
++  },
++
++  destroyed() {
++    unsubscribeStore();
++  },
+ };
+ </script>
+diff --git a/src/components/articles/Articles.vue b/src/components/articles/Articles.vue
+index b8d7b7f..532cf9b 100644
+--- a/src/components/articles/Articles.vue
++++ b/src/components/articles/Articles.vue
+@@ -4,11 +4,10 @@
+     <div>
+       <div v-if="isLoading">Loading spinner...</div>
+       <div v-else-if="hasError">{{errorMessage}}</div>
+-      <div v-else v-for="article in articles" :key="article.slug">
++      <div v-else v-for="article in articles" :key="article.slug" @click="onClick(article.slug)">
+         <p>{{article.title}}</p>
+       </div>
+     </div>
+-
+   </div>
+ </template>
+ 
+@@ -19,11 +18,25 @@ export default {
+   name: 'Articles',
+   components: {
+   },
++
+   methods: {
+     ...mapActions({
+       fetchArticles: 'fetchArticles',
++      updateHistory: 'updateHistory',
+     }),
++
++    // this.updateHistory can be called from /article/:name page (mounted event)
++    // but since that page only contains history (not similar news),
++    // there is no point of storing that history again on click event
++    // or we can if you want to keep count for eg.
++    onClick(slug) {
++      this.$router.push(
++        { name: 'ArticleDetails', params: { name: slug } },
++        () => this.updateHistory(slug),
++      );
++    },
+   },
++
+   computed: {
+     ...mapGetters({
+       articles: 'processedArticles',
+@@ -32,6 +45,7 @@ export default {
+       errorMessage: 'errorMessage',
+     }),
+   },
++
+   created() {
+     this.fetchArticles();
+   },
+diff --git a/src/router/index.js b/src/router/index.js
+index e02bc44..eac7178 100644
+--- a/src/router/index.js
++++ b/src/router/index.js
+@@ -13,7 +13,7 @@ const routes = [
+     component: Home,
+   },
+   {
+-    path: '/article/:title',
++    path: '/article/:name',
+     name: 'ArticleDetails',
+     component: ArticleDetails,
+     // route level code-splitting
+diff --git a/src/store/articles/actions.js b/src/store/articles/actions.js
+index 2aead54..da511fe 100644
+--- a/src/store/articles/actions.js
++++ b/src/store/articles/actions.js
+@@ -1,15 +1,15 @@
+ // import { Api, ApiTokenMiddleware, WrapMiddleware } from '@beevk/newsapi-sdk';
+ 
+-const sluggify = ({ publishedAt, title }) => {
++const sluggedUrl = (publishedAt, title) => {
+   if (!(publishedAt || title)) {
+     return '';
+   }
+   const trimmedDate = publishedAt?.split('T')[0];
+-  const sluggifiedTitle = title?.toLowerCase()
++  const sluggedTitle = title?.toLowerCase()
+     .replace(/[^a-z0-9 -]/g, '')
+     .replace(/\s+/g, '-')
+     .replace(/-+/g, '-');
+-  return `${trimmedDate}-${sluggifiedTitle}`;
++  return `${trimmedDate}-${sluggedTitle}`;
+ };
+ 
+ const actions = {
+@@ -30,8 +30,8 @@ const actions = {
+     const articlesWithSlug = articles.map(
+       (article) => {
+         const copy = { ...article };
+-        // const { publishedAt, title } = copy;
+-        const slug = sluggify(copy);
++        const { publishedAt, title } = copy;
++        const slug = sluggedUrl(publishedAt, title);
+         // console.log('SLUG:::', slug, copy);
+         copy.slug = slug;
+         return copy;
+@@ -43,11 +43,18 @@ const actions = {
+     return commit('setLoading', false);
+   },
+ 
++  loadInitialStateForHistory({ commit }) {
++    const historyFromLocalStorage = JSON.parse(localStorage.getItem('visitedArticlesHistory'));
++    if (Array.isArray(historyFromLocalStorage) && historyFromLocalStorage.length) {
++      commit('initializeHistory', historyFromLocalStorage);
++    }
++  },
++
++  updateHistory({ commit }, url) {
++    commit('pushToHistory', url);
++  },
++
+   setCurrentPage(context, slug) {
+-    // const { news } = this.$state;
+-    // if (!news) {
+-    //   context.dispatch('fetchNews');
+-    // }
+     const pages = localStorage.getItem('visitedPages') || '';
+     let allVisitedPages = [];
+     if (pages) {
+diff --git a/src/store/articles/mutations.js b/src/store/articles/mutations.js
+index 8732f54..ce77b6f 100644
+--- a/src/store/articles/mutations.js
++++ b/src/store/articles/mutations.js
+@@ -23,6 +23,17 @@ const mutations = {
+     state.currentPage = currentPage;
+   },
+ 
++  initializeHistory: (state, history) => {
++    state.history = [...history];
++  },
++
++  pushToHistory: (state, articleLink) => {
++    // don't push duplicate copy
++    const { history } = state;
++    if (history.indexOf(articleLink) === -1) {
++      state.history = [...history, articleLink];
++    }
++  },
+ };
+ 
+ export default mutations;
+diff --git a/src/store/index.js b/src/store/index.js
+index 47a2d59..cedaf2f 100644
+--- a/src/store/index.js
++++ b/src/store/index.js
+@@ -8,7 +8,7 @@ import state from './rootState';
+ 
+ Vue.use(Vuex);
+ 
+-export default new Vuex.Store({
++const store = new Vuex.Store({
+   state,
+   getters,
+   mutations,
+@@ -16,3 +16,12 @@ export default new Vuex.Store({
+   modules: {
+   },
+ });
++
++export const unsubscribeStore = store.subscribe((mutation, updatedState) => {
++  if (mutation.type === 'pushToHistory') {
++    const articles = JSON.stringify(updatedState.history);
++    localStorage.setItem('visitedArticlesHistory', articles);
++  }
++});
++
++export default store;
+diff --git a/src/store/rootState.js b/src/store/rootState.js
+index 3cca82d..05acf24 100644
+--- a/src/store/rootState.js
++++ b/src/store/rootState.js
+@@ -6,6 +6,7 @@ const state = {
+   searchQuery: '',
+   selectedSourceForFilter: '',
+   currentPage: '',
++  history: [],
+ };
+ 
+ export default state;
+diff --git a/src/views/ArticleDetails.vue b/src/views/ArticleDetails.vue
+index 2b5b3ab..5c38cd4 100644
+--- a/src/views/ArticleDetails.vue
++++ b/src/views/ArticleDetails.vue
+@@ -21,9 +21,13 @@
+ <script>
+ export default {
+   name: 'ArticleDetails',
++
+   components: {
+     // HelloWorld,
+   },
++
++  mounted() {
++  },
+ };
+ </script>
+ 
+-- 
+2.25.1
+
